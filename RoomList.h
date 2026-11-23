@@ -3,18 +3,32 @@
 
 #include <vector>
 #include "Room.h"
+#include "DateTime.h"
 using namespace std;
 
-class RoomList {
+class RoomList
+{
 private:
+    struct Reservation
+    {
+        int roomNumber;
+        DateTime startDate;
+        DateTime endDate;
+
+        Reservation(int roomNumber, DateTime startDate, DateTime endDate);
+    };
+
     vector<Room> rooms;
+    vector<Reservation> reservations;
 
 public:
     bool add(int number, int beds, double pricePerNight);
-    Room* findByNumber(int number);
+    Room *findByNumber(int number);
     void showAll();
     void showWithMinBeds(int minBeds);
     int count();
+    bool addReservation(int number, DateTime startDate, DateTime endDate);
+    bool checkAvailability(int number, DateTime startDate, DateTime endDate);
 };
 
 #endif

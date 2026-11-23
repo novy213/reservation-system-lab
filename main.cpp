@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <stdexcept>
 #include "ClientList.h"
 #include "RoomList.h"
 using namespace std;
@@ -24,6 +25,19 @@ double readDouble() {
     return x;
 }
 
+DateTime readDate(string message) {
+    string date;
+    while (true) {
+        cout << message;
+        cin >> date;
+        try {
+            return DateTime(date);
+        } catch (const exception& e) {
+            cout << "Blad daty: " << e.what() << endl;
+        }
+    }
+}
+
 void showMenu() {
     cout << endl;
     cout << "=== SYSTEM REZERWACJI ===" << endl;
@@ -32,6 +46,8 @@ void showMenu() {
     cout << "3. Dodaj pokoj" << endl;
     cout << "4. Pokaz pokoje" << endl;
     cout << "5. Szukaj pokoju (min. liczba lozek)" << endl;
+    cout << "6. Dodaj rezerwacje" << endl;
+    cout << "7. Sprawdz dostepnosc pokoju" << endl;
     cout << "0. Wyjscie" << endl;
     cout << "Wybor: ";
 }
@@ -78,6 +94,34 @@ int main() {
             cout << "Ile lozek minimum: ";
             int minBeds = readInt();
             rooms.showWithMinBeds(minBeds);
+        } else if (choice == 6) {
+            cout << "Numer pokoju: ";
+            int number = readInt();
+            DateTime startDate = readDate("Data przyjazdu (rrrr-mm-dd): ");
+            DateTime endDate = readDate("Data wyjazdu (rrrr-mm-dd): ");
+            if (rooms.findByNumber(number) == NULL) {
+                cout << "Nie ma takiego pokoju" << endl;
+            } else if (endDate.date <= startDate.date) {
+                cout << "Data wyjazdu musi byc pozniejsza niz przyjazdu" << endl;
+            } else if (rooms.addReservation(number, startDate, endDate)) {
+                cout << "Dodano rezerwacje" << endl;
+            } else {
+                cout << "Pokoj jest zajety w tym terminie" << endl;
+            }
+        } else if (choice == 7) {
+            cout << "Numer pokoju: ";
+            int number = readInt();
+            DateTime startDate = readDate("Data przyjazdu (rrrr-mm-dd): ");
+            DateTime endDate = readDate("Data wyjazdu (rrrr-mm-dd): ");
+            if (rooms.findByNumber(number) == NULL) {
+                cout << "Nie ma takiego pokoju" << endl;
+            } else if (endDate.date <= startDate.date) {
+                cout << "Data wyjazdu musi byc pozniejsza niz przyjazdu" << endl;
+            } else if (rooms.checkAvailability(number, startDate, endDate)) {
+                cout << "Pokoj jest dostepny" << endl;
+            } else {
+                cout << "Pokoj jest zajety w tym terminie" << endl;
+            }
         } else if (choice != 0) {
             cout << "Nie ma takiej opcji" << endl;
         }
