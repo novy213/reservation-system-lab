@@ -90,6 +90,8 @@ void showMenu(int clientCount, int roomCount) {
     cout << "  [1] Dodaj klienta" << endl;
     cout << "  [2] Pokaz klientow" << endl;
     cout << "  [10] Historia rezerwacji klienta" << endl;
+    cout << "  [11] Edytuj klienta" << endl;
+    cout << "  [12] Usun klienta" << endl;
     cout << endl;
     cout << "POKOJE I REZERWACJE" << endl;
     cout << "  [3] Dodaj pokoj" << endl;
@@ -97,6 +99,8 @@ void showMenu(int clientCount, int roomCount) {
     cout << "  [5] Szukaj pokoju wedlug liczby lozek" << endl;
     cout << "  [6] Dodaj rezerwacje" << endl;
     cout << "  [7] Sprawdz dostepnosc pokoju" << endl;
+    cout << "  [13] Edytuj pokoj" << endl;
+    cout << "  [14] Usun pokoj" << endl;
     cout << endl;
     cout << "ZAPIS I ODCZYT" << endl;
     cout << "  [8] Zapisz stan aplikacji" << endl;
@@ -160,7 +164,7 @@ int main() {
                 cout << "Nie ma takiego klienta" << endl;
             } else if (rooms.findByNumber(number) == NULL) {
                 cout << "Nie ma takiego pokoju" << endl;
-            } else if (endDate.date <= startDate.date) {
+            } else if (!(startDate < endDate)) {
                 cout << "Data wyjazdu musi byc pozniejsza niz przyjazdu" << endl;
             } else if (rooms.addReservation(number, clientId, startDate, endDate)) {
                 cout << "Dodano rezerwacje" << endl;
@@ -174,7 +178,7 @@ int main() {
             DateTime endDate = readDate("Data wyjazdu (rrrr-mm-dd): ");
             if (rooms.findByNumber(number) == NULL) {
                 cout << "Nie ma takiego pokoju" << endl;
-            } else if (endDate.date <= startDate.date) {
+            } else if (!(startDate < endDate)) {
                 cout << "Data wyjazdu musi byc pozniejsza niz przyjazdu" << endl;
             } else if (rooms.checkAvailability(number, startDate, endDate)) {
                 cout << "Pokoj jest dostepny" << endl;
@@ -189,6 +193,31 @@ int main() {
             } else {
                 rooms.showReservationsForClient(clientId);
             }
+        } else if (choice == 11) {
+            cout << "ID klienta: ";
+            int id = readInt();
+            string name, surname, phone;
+            cout << "Nowe imie: ";
+            cin >> name;
+            cout << "Nowe nazwisko: ";
+            cin >> surname;
+            cout << "Nowy telefon (9 cyfr): ";
+            cin >> phone;
+            if (clients.update(id, name, surname, phone)) {
+                cout << "Zmieniono dane klienta" << endl;
+            } else {
+                cout << "Blad: nie ma klienta albo dane sa niepoprawne" << endl;
+            }
+        } else if (choice == 12) {
+            cout << "ID klienta: ";
+            int id = readInt();
+            if (rooms.hasReservationsForClient(id)) {
+                cout << "Nie mozna usunac klienta z rezerwacjami" << endl;
+            } else if (clients.remove(id)) {
+                cout << "Usunieto klienta" << endl;
+            } else {
+                cout << "Nie ma takiego klienta" << endl;
+            }
         } else if (choice == 8) {
             if (saveState(clients, rooms)) {
                 cout << "Zapisano stan aplikacji w pliku stan_aplikacji.txt" << endl;
@@ -200,6 +229,26 @@ int main() {
                 cout << "Wczytano stan aplikacji z pliku stan_aplikacji.txt" << endl;
             } else {
                 cout << "Blad odczytu stanu aplikacji; obecny stan pozostaje bez zmian" << endl;
+            }
+        } else if (choice == 13) {
+            cout << "Numer pokoju: ";
+            int number = readInt();
+            cout << "Nowa liczba lozek: ";
+            int beds = readInt();
+            cout << "Nowa cena za noc: ";
+            double price = readDouble();
+            if (rooms.update(number, beds, price)) {
+                cout << "Zmieniono pokoj" << endl;
+            } else {
+                cout << "Blad: nie ma pokoju albo dane sa niepoprawne" << endl;
+            }
+        } else if (choice == 14) {
+            cout << "Numer pokoju: ";
+            int number = readInt();
+            if (rooms.remove(number)) {
+                cout << "Usunieto pokoj" << endl;
+            } else {
+                cout << "Nie mozna usunac pokoju z rezerwacjami albo pokoj nie istnieje" << endl;
             }
         } else if (choice != 0) {
             cout << "Nie ma takiej opcji" << endl;

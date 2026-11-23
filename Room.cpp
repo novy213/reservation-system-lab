@@ -1,25 +1,47 @@
 #include "Room.h"
+#include <cmath>
 #include <iostream>
+#include <stdexcept>
 using namespace std;
 
-Room::Room(int number, int beds, double pricePerNight) {
-    this->number = number;
-    this->beds = beds;
-    this->pricePerNight = pricePerNight;
+Room::Room() : Entity(), beds(0), pricePerNight(0)
+{
 }
 
-int Room::getNumber() {
-    return number;
+Room::Room(int number, int beds, double pricePerNight)
+    : Entity(number), beds(0), pricePerNight(0)
+{
+    setBeds(beds);
+    setPricePerNight(pricePerNight);
 }
 
-int Room::getBeds() {
+int Room::getNumber() const {
+    return getId();
+}
+
+int Room::getBeds() const {
     return beds;
 }
 
-double Room::getPricePerNight() {
+double Room::getPricePerNight() const {
     return pricePerNight;
 }
 
-void Room::show() {
-    cout << "Pokoj " << number << ", lozka: " << beds << ", cena za noc: " << pricePerNight << " zl" << endl;
+void Room::setBeds(int beds) {
+    if (beds <= 0) {
+        throw invalid_argument("Liczba lozek musi byc dodatnia");
+    }
+    this->beds = beds;
+}
+
+void Room::setPricePerNight(double pricePerNight) {
+    if (!isfinite(pricePerNight) || pricePerNight <= 0) {
+        throw invalid_argument("Cena musi byc dodatnia");
+    }
+    this->pricePerNight = pricePerNight;
+}
+
+void Room::show() const {
+    cout << "Pokoj " << getNumber() << ", lozka: " << beds
+         << ", cena za noc: " << pricePerNight << " zl" << endl;
 }

@@ -1,11 +1,14 @@
 #include "DateTime.h"
-#include <iostream>
+#include <ostream>
 #include <stdexcept>
 using namespace std;
 
-DateTime::DateTime(string date)
+DateTime::DateTime() : DateTime("2000-01-01")
 {
-    // rrrr-mm-dd
+}
+
+DateTime::DateTime(const string &date)
+{
     if (date.length() != 10)
     {
         throw invalid_argument("Zla dlugosc daty, oczekiwano formatu rrrr-mm-dd");
@@ -34,7 +37,6 @@ DateTime::DateTime(string date)
     }
 
     int dniWMiesiacu[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    // rok przestepny
     if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
     {
         dniWMiesiacu[1] = 29;
@@ -44,4 +46,40 @@ DateTime::DateTime(string date)
         throw out_of_range("Zly dzien dla tego miesiaca");
     }
     this->date = date;
+}
+
+string DateTime::getDate() const
+{
+    return date;
+}
+
+int DateTime::getDay() const
+{
+    return day;
+}
+
+int DateTime::getMonth() const
+{
+    return month;
+}
+
+int DateTime::getYear() const
+{
+    return year;
+}
+
+bool DateTime::operator<(const DateTime &other) const
+{
+    return date < other.date;
+}
+
+bool DateTime::operator==(const DateTime &other) const
+{
+    return date == other.date;
+}
+
+ostream &operator<<(ostream &output, const DateTime &date)
+{
+    output << date.getDate();
+    return output;
 }

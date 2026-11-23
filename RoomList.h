@@ -24,7 +24,10 @@ private:
     vector<Reservation> reservations;
 
 public:
+    RoomList();
     bool add(int number, int beds, double pricePerNight);
+    bool update(int number, int beds, double pricePerNight);
+    bool remove(int number);
     Room *findByNumber(int number);
     void showAll();
     void showWithMinBeds(int minBeds);
@@ -32,6 +35,7 @@ public:
     bool addReservation(int number, int clientId, DateTime startDate, DateTime endDate);
     bool checkAvailability(int number, DateTime startDate, DateTime endDate);
     void showReservationsForClient(int clientId);
+    bool hasReservationsForClient(int clientId);
     bool save(ostream& output);
     bool load(istream& input);
 };

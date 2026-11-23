@@ -1,22 +1,24 @@
 #include "ClientList.h"
 #include <iostream>
+#include <limits>
+#include <stdexcept>
 using namespace std;
 
 ClientList::ClientList() {
     nextId = 1;
 }
 
-bool ClientList::isPhoneCorrect(string phone) {
+bool ClientList::isPhoneCorrect(string phone, int ignoredId) {
     if (phone.length() != 9) {
         return false;
     }
-    for (int i = 0; i < phone.length(); i++) {
+    for (size_t i = 0; i < phone.length(); i++) {
         if (phone[i] < '0' || phone[i] > '9') {
             return false;
         }
     }
-    for (int i = 0; i < clients.size(); i++) {
-        if (clients[i].getPhone() == phone) {
+    for (size_t i = 0; i < clients.size(); i++) {
+        if (clients[i].getId() != ignoredId && clients[i].getPhone() == phone) {
             return false;
         }
     }
@@ -35,8 +37,30 @@ bool ClientList::add(string name, string surname, string phone) {
     return true;
 }
 
+bool ClientList::update(int id, string name, string surname, string phone) {
+    Client* client = findById(id);
+    if (client == NULL || name.empty() || surname.empty() ||
+        !isPhoneCorrect(phone, id)) {
+        return false;
+    }
+    client->setName(name);
+    client->setSurname(surname);
+    client->setPhone(phone);
+    return true;
+}
+
+bool ClientList::remove(int id) {
+    for (size_t i = 0; i < clients.size(); i++) {
+        if (clients[i].getId() == id) {
+            clients.erase(clients.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
 Client* ClientList::findById(int id) {
-    for (int i = 0; i < clients.size(); i++) {
+    for (size_t i = 0; i < clients.size(); i++) {
         if (clients[i].getId() == id) {
             return &clients[i];
         }
@@ -49,8 +73,9 @@ void ClientList::showAll() {
         cout << "Brak klientow" << endl;
         return;
     }
-    for (int i = 0; i < clients.size(); i++) {
-        clients[i].show();
+    for (size_t i = 0; i < clients.size(); i++) {
+        const Entity* entity = &clients[i];
+        entity->show();
     }
 }
 
@@ -60,7 +85,7 @@ int ClientList::count() {
 
 bool ClientList::save(ostream& output) {
     output << clients.size() << endl;
-    for (int i = 0; i < clients.size(); i++) {
+    for (size_t i = 0; i < clients.size(); i++) {
         output << clients[i].getId() << " "
                << clients[i].getName() << " "
                << clients[i].getSurname() << " "
@@ -76,16 +101,27 @@ bool ClientList::load(istream& input) {
     }
 
     ClientList loadedClients;
+    int previousId = 0;
     for (int i = 0; i < numberOfClients; i++) {
         int id;
         string name, surname, phone;
         if (!(input >> id >> name >> surname >> phone) ||
-            id != loadedClients.nextId ||
-            !loadedClients.add(name, surname, phone)) {
+            id <= previousId ||
+            id == numeric_limits<int>::max() ||
+            name.empty() ||
+            surname.empty() ||
+            !loadedClients.isPhoneCorrect(phone)) {
             return false;
         }
+        try {
+            loadedClients.clients.push_back(Client(id, name, surname, phone));
+        } catch (const invalid_argument&) {
+            return false;
+        }
+        previousId = id;
     }
 
+    loadedClients.nextId = previousId + 1;
     *this = loadedClients;
     return true;
 }

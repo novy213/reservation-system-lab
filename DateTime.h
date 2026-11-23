@@ -2,16 +2,28 @@
 #define DATETIME_H
 
 #include <string>
+#include <iosfwd>
 using namespace std;
 
-struct DateTime
+class DateTime
 {
-public:
+private:
     string date;
     int day;
     int month;
     int year;
-    DateTime(string date);
+
+public:
+    DateTime();
+    explicit DateTime(const string& date);
+    string getDate() const;
+    int getDay() const;
+    int getMonth() const;
+    int getYear() const;
+    bool operator<(const DateTime& other) const;
+    bool operator==(const DateTime& other) const;
 };
+
+ostream& operator<<(ostream& output, const DateTime& date);
 
 #endif

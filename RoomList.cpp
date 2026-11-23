@@ -1,4 +1,5 @@
 #include "RoomList.h"
+#include <cmath>
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
@@ -9,9 +10,13 @@ RoomList::Reservation::Reservation(int roomNumber, int clientId, DateTime startD
 {
 }
 
+RoomList::RoomList()
+{
+}
+
 bool RoomList::add(int number, int beds, double pricePerNight)
 {
-    if (number <= 0 || beds <= 0 || pricePerNight <= 0)
+    if (number <= 0 || beds <= 0 || !isfinite(pricePerNight) || pricePerNight <= 0)
     {
         return false;
     }
@@ -23,9 +28,41 @@ bool RoomList::add(int number, int beds, double pricePerNight)
     return true;
 }
 
+bool RoomList::update(int number, int beds, double pricePerNight)
+{
+    Room *room = findByNumber(number);
+    if (room == NULL || beds <= 0 || !isfinite(pricePerNight) || pricePerNight <= 0)
+    {
+        return false;
+    }
+    room->setBeds(beds);
+    room->setPricePerNight(pricePerNight);
+    return true;
+}
+
+bool RoomList::remove(int number)
+{
+    for (size_t i = 0; i < reservations.size(); i++)
+    {
+        if (reservations[i].roomNumber == number)
+        {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < rooms.size(); i++)
+    {
+        if (rooms[i].getNumber() == number)
+        {
+            rooms.erase(rooms.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
 Room *RoomList::findByNumber(int number)
 {
-    for (int i = 0; i < rooms.size(); i++)
+    for (size_t i = 0; i < rooms.size(); i++)
     {
         if (rooms[i].getNumber() == number)
         {
@@ -42,16 +79,17 @@ void RoomList::showAll()
         cout << "Brak pokoi" << endl;
         return;
     }
-    for (int i = 0; i < rooms.size(); i++)
+    for (size_t i = 0; i < rooms.size(); i++)
     {
-        rooms[i].show();
+        const Entity *entity = &rooms[i];
+        entity->show();
     }
 }
 
 void RoomList::showWithMinBeds(int minBeds)
 {
     bool found = false;
-    for (int i = 0; i < rooms.size(); i++)
+    for (size_t i = 0; i < rooms.size(); i++)
     {
         if (rooms[i].getBeds() >= minBeds)
         {
@@ -72,7 +110,7 @@ int RoomList::count()
 
 bool RoomList::addReservation(int number, int clientId, DateTime startDate, DateTime endDate)
 {
-    if (clientId <= 0 || endDate.date <= startDate.date)
+    if (clientId <= 0 || startDate == endDate || endDate < startDate)
     {
         return false;
     }
@@ -86,15 +124,15 @@ bool RoomList::addReservation(int number, int clientId, DateTime startDate, Date
 
 bool RoomList::checkAvailability(int number, DateTime startDate, DateTime endDate)
 {
-    if (findByNumber(number) == NULL || endDate.date <= startDate.date)
+    if (findByNumber(number) == NULL || startDate == endDate || endDate < startDate)
     {
         return false;
     }
-    for (int i = 0; i < reservations.size(); i++)
+    for (size_t i = 0; i < reservations.size(); i++)
     {
         if (reservations[i].roomNumber == number &&
-            startDate.date < reservations[i].endDate.date &&
-            endDate.date > reservations[i].startDate.date)
+            startDate < reservations[i].endDate &&
+            reservations[i].startDate < endDate)
         {
             return false;
         }
@@ -105,13 +143,13 @@ bool RoomList::checkAvailability(int number, DateTime startDate, DateTime endDat
 void RoomList::showReservationsForClient(int clientId)
 {
     bool found = false;
-    for (int i = 0; i < reservations.size(); i++)
+    for (size_t i = 0; i < reservations.size(); i++)
     {
         if (reservations[i].clientId == clientId)
         {
             cout << "Pokoj " << reservations[i].roomNumber
-                 << ", od " << reservations[i].startDate.date
-                 << " do " << reservations[i].endDate.date << endl;
+                 << ", od " << reservations[i].startDate
+                 << " do " << reservations[i].endDate << endl;
             found = true;
         }
     }
@@ -121,11 +159,23 @@ void RoomList::showReservationsForClient(int clientId)
     }
 }
 
+bool RoomList::hasReservationsForClient(int clientId)
+{
+    for (size_t i = 0; i < reservations.size(); i++)
+    {
+        if (reservations[i].clientId == clientId)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool RoomList::save(ostream& output)
 {
     output << rooms.size() << endl;
     output << setprecision(17);
-    for (int i = 0; i < rooms.size(); i++)
+    for (size_t i = 0; i < rooms.size(); i++)
     {
         output << rooms[i].getNumber() << " "
                << rooms[i].getBeds() << " "
@@ -133,12 +183,12 @@ bool RoomList::save(ostream& output)
     }
 
     output << reservations.size() << endl;
-    for (int i = 0; i < reservations.size(); i++)
+    for (size_t i = 0; i < reservations.size(); i++)
     {
         output << reservations[i].roomNumber << " "
                << reservations[i].clientId << " "
-               << reservations[i].startDate.date << " "
-               << reservations[i].endDate.date << endl;
+               << reservations[i].startDate.getDate() << " "
+               << reservations[i].endDate.getDate() << endl;
     }
     return output.good();
 }
