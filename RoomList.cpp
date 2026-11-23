@@ -4,8 +4,8 @@
 #include <stdexcept>
 using namespace std;
 
-RoomList::Reservation::Reservation(int roomNumber, DateTime startDate, DateTime endDate)
-    : roomNumber(roomNumber), startDate(startDate), endDate(endDate)
+RoomList::Reservation::Reservation(int roomNumber, int clientId, DateTime startDate, DateTime endDate)
+    : roomNumber(roomNumber), clientId(clientId), startDate(startDate), endDate(endDate)
 {
 }
 
@@ -70,9 +70,9 @@ int RoomList::count()
     return rooms.size();
 }
 
-bool RoomList::addReservation(int number, DateTime startDate, DateTime endDate)
+bool RoomList::addReservation(int number, int clientId, DateTime startDate, DateTime endDate)
 {
-    if (endDate.date <= startDate.date)
+    if (clientId <= 0 || endDate.date <= startDate.date)
     {
         return false;
     }
@@ -80,7 +80,7 @@ bool RoomList::addReservation(int number, DateTime startDate, DateTime endDate)
     {
         return false;
     }
-    reservations.push_back(Reservation(number, startDate, endDate));
+    reservations.push_back(Reservation(number, clientId, startDate, endDate));
     return true;
 }
 
@@ -102,6 +102,25 @@ bool RoomList::checkAvailability(int number, DateTime startDate, DateTime endDat
     return true;
 }
 
+void RoomList::showReservationsForClient(int clientId)
+{
+    bool found = false;
+    for (int i = 0; i < reservations.size(); i++)
+    {
+        if (reservations[i].clientId == clientId)
+        {
+            cout << "Pokoj " << reservations[i].roomNumber
+                 << ", od " << reservations[i].startDate.date
+                 << " do " << reservations[i].endDate.date << endl;
+            found = true;
+        }
+    }
+    if (!found)
+    {
+        cout << "Brak rezerwacji dla tego klienta" << endl;
+    }
+}
+
 bool RoomList::save(ostream& output)
 {
     output << rooms.size() << endl;
@@ -117,6 +136,7 @@ bool RoomList::save(ostream& output)
     for (int i = 0; i < reservations.size(); i++)
     {
         output << reservations[i].roomNumber << " "
+               << reservations[i].clientId << " "
                << reservations[i].startDate.date << " "
                << reservations[i].endDate.date << endl;
     }
@@ -151,9 +171,9 @@ bool RoomList::load(istream& input)
 
     for (int i = 0; i < numberOfReservations; i++)
     {
-        int number;
+        int number, clientId;
         string startDateText, endDateText;
-        if (!(input >> number >> startDateText >> endDateText))
+        if (!(input >> number >> clientId >> startDateText >> endDateText))
         {
             return false;
         }
@@ -161,7 +181,7 @@ bool RoomList::load(istream& input)
         {
             DateTime startDate(startDateText);
             DateTime endDate(endDateText);
-            if (!loadedRooms.addReservation(number, startDate, endDate))
+            if (!loadedRooms.addReservation(number, clientId, startDate, endDate))
             {
                 return false;
             }

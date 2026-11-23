@@ -54,7 +54,6 @@ bool saveState(ClientList& clients, RoomList& rooms) {
     if (!output) {
         return false;
     }
-    output << "RESERVATION_SYSTEM_1" << endl;
     if (!clients.save(output) || !rooms.save(output)) {
         return false;
     }
@@ -64,14 +63,10 @@ bool saveState(ClientList& clients, RoomList& rooms) {
 
 bool loadState(ClientList& clients, RoomList& rooms) {
     ifstream input("stan_aplikacji.txt");
-    string version;
-    if (!(input >> version) || version != "RESERVATION_SYSTEM_1") {
-        return false;
-    }
-
     ClientList loadedClients;
     RoomList loadedRooms;
-    if (!loadedClients.load(input) || !loadedRooms.load(input)) {
+    if (!loadedClients.load(input) ||
+        !loadedRooms.load(input)) {
         return false;
     }
     string extraData;
@@ -94,6 +89,7 @@ void showMenu(int clientCount, int roomCount) {
     cout << "KLIENCI" << endl;
     cout << "  [1] Dodaj klienta" << endl;
     cout << "  [2] Pokaz klientow" << endl;
+    cout << "  [10] Historia rezerwacji klienta" << endl;
     cout << endl;
     cout << "POKOJE I REZERWACJE" << endl;
     cout << "  [3] Dodaj pokoj" << endl;
@@ -154,15 +150,19 @@ int main() {
             int minBeds = readInt();
             rooms.showWithMinBeds(minBeds);
         } else if (choice == 6) {
+            cout << "ID klienta: ";
+            int clientId = readInt();
             cout << "Numer pokoju: ";
             int number = readInt();
             DateTime startDate = readDate("Data przyjazdu (rrrr-mm-dd): ");
             DateTime endDate = readDate("Data wyjazdu (rrrr-mm-dd): ");
-            if (rooms.findByNumber(number) == NULL) {
+            if (clients.findById(clientId) == NULL) {
+                cout << "Nie ma takiego klienta" << endl;
+            } else if (rooms.findByNumber(number) == NULL) {
                 cout << "Nie ma takiego pokoju" << endl;
             } else if (endDate.date <= startDate.date) {
                 cout << "Data wyjazdu musi byc pozniejsza niz przyjazdu" << endl;
-            } else if (rooms.addReservation(number, startDate, endDate)) {
+            } else if (rooms.addReservation(number, clientId, startDate, endDate)) {
                 cout << "Dodano rezerwacje" << endl;
             } else {
                 cout << "Pokoj jest zajety w tym terminie" << endl;
@@ -180,6 +180,14 @@ int main() {
                 cout << "Pokoj jest dostepny" << endl;
             } else {
                 cout << "Pokoj jest zajety w tym terminie" << endl;
+            }
+        } else if (choice == 10) {
+            cout << "ID klienta: ";
+            int clientId = readInt();
+            if (clients.findById(clientId) == NULL) {
+                cout << "Nie ma takiego klienta" << endl;
+            } else {
+                rooms.showReservationsForClient(clientId);
             }
         } else if (choice == 8) {
             if (saveState(clients, rooms)) {

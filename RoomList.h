@@ -13,10 +13,11 @@ private:
     struct Reservation
     {
         int roomNumber;
+        int clientId;
         DateTime startDate;
         DateTime endDate;
 
-        Reservation(int roomNumber, DateTime startDate, DateTime endDate);
+        Reservation(int roomNumber, int clientId, DateTime startDate, DateTime endDate);
     };
 
     vector<Room> rooms;
@@ -28,8 +29,9 @@ public:
     void showAll();
     void showWithMinBeds(int minBeds);
     int count();
-    bool addReservation(int number, DateTime startDate, DateTime endDate);
+    bool addReservation(int number, int clientId, DateTime startDate, DateTime endDate);
     bool checkAvailability(int number, DateTime startDate, DateTime endDate);
+    void showReservationsForClient(int clientId);
     bool save(ostream& output);
     bool load(istream& input);
 };
