@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <stdexcept>
 #include "ClientList.h"
@@ -25,6 +26,16 @@ double readDouble() {
     return x;
 }
 
+void clearScreen() {
+    cout << "\033[2J\033[H";
+}
+
+void waitForEnter() {
+    cout << endl << "Nacisnij Enter, aby wrocic do menu...";
+    cin.ignore(1000, '\n');
+    cin.get();
+}
+
 DateTime readDate(string message) {
     string date;
     while (true) {
@@ -38,17 +49,64 @@ DateTime readDate(string message) {
     }
 }
 
-void showMenu() {
+bool saveState(ClientList& clients, RoomList& rooms) {
+    ofstream output("stan_aplikacji.txt");
+    if (!output) {
+        return false;
+    }
+    output << "RESERVATION_SYSTEM_1" << endl;
+    if (!clients.save(output) || !rooms.save(output)) {
+        return false;
+    }
+    output.close();
+    return output.good();
+}
+
+bool loadState(ClientList& clients, RoomList& rooms) {
+    ifstream input("stan_aplikacji.txt");
+    string version;
+    if (!(input >> version) || version != "RESERVATION_SYSTEM_1") {
+        return false;
+    }
+
+    ClientList loadedClients;
+    RoomList loadedRooms;
+    if (!loadedClients.load(input) || !loadedRooms.load(input)) {
+        return false;
+    }
+    string extraData;
+    if (input >> extraData) {
+        return false;
+    }
+
+    clients = loadedClients;
+    rooms = loadedRooms;
+    return true;
+}
+
+void showMenu(int clientCount, int roomCount) {
     cout << endl;
-    cout << "=== SYSTEM REZERWACJI ===" << endl;
-    cout << "1. Dodaj klienta" << endl;
-    cout << "2. Pokaz klientow" << endl;
-    cout << "3. Dodaj pokoj" << endl;
-    cout << "4. Pokaz pokoje" << endl;
-    cout << "5. Szukaj pokoju (min. liczba lozek)" << endl;
-    cout << "6. Dodaj rezerwacje" << endl;
-    cout << "7. Sprawdz dostepnosc pokoju" << endl;
-    cout << "0. Wyjscie" << endl;
+    cout << "========================================" << endl;
+    cout << "           SYSTEM REZERWACJI" << endl;
+    cout << "========================================" << endl;
+    cout << "Klienci: " << clientCount << " | Pokoje: " << roomCount << endl;
+    cout << "----------------------------------------" << endl;
+    cout << "KLIENCI" << endl;
+    cout << "  [1] Dodaj klienta" << endl;
+    cout << "  [2] Pokaz klientow" << endl;
+    cout << endl;
+    cout << "POKOJE I REZERWACJE" << endl;
+    cout << "  [3] Dodaj pokoj" << endl;
+    cout << "  [4] Pokaz pokoje" << endl;
+    cout << "  [5] Szukaj pokoju wedlug liczby lozek" << endl;
+    cout << "  [6] Dodaj rezerwacje" << endl;
+    cout << "  [7] Sprawdz dostepnosc pokoju" << endl;
+    cout << endl;
+    cout << "ZAPIS I ODCZYT" << endl;
+    cout << "  [8] Zapisz stan aplikacji" << endl;
+    cout << "  [9] Odczytaj stan aplikacji" << endl;
+    cout << "----------------------------------------" << endl;
+    cout << "  [0] Wyjscie" << endl;
     cout << "Wybor: ";
 }
 
@@ -58,7 +116,8 @@ int main() {
     int choice = -1;
 
     while (choice != 0) {
-        showMenu();
+        clearScreen();
+        showMenu(clients.count(), rooms.count());
         choice = readInt();
 
         if (choice == 1) {
@@ -122,8 +181,23 @@ int main() {
             } else {
                 cout << "Pokoj jest zajety w tym terminie" << endl;
             }
+        } else if (choice == 8) {
+            if (saveState(clients, rooms)) {
+                cout << "Zapisano stan aplikacji w pliku stan_aplikacji.txt" << endl;
+            } else {
+                cout << "Blad zapisu stanu aplikacji" << endl;
+            }
+        } else if (choice == 9) {
+            if (loadState(clients, rooms)) {
+                cout << "Wczytano stan aplikacji z pliku stan_aplikacji.txt" << endl;
+            } else {
+                cout << "Blad odczytu stanu aplikacji; obecny stan pozostaje bez zmian" << endl;
+            }
         } else if (choice != 0) {
             cout << "Nie ma takiej opcji" << endl;
+        }
+        if (choice != 0) {
+            waitForEnter();
         }
     }
 

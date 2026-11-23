@@ -1,5 +1,7 @@
 #include "RoomList.h"
 #include <iostream>
+#include <iomanip>
+#include <stdexcept>
 using namespace std;
 
 RoomList::Reservation::Reservation(int roomNumber, DateTime startDate, DateTime endDate)
@@ -97,5 +99,80 @@ bool RoomList::checkAvailability(int number, DateTime startDate, DateTime endDat
             return false;
         }
     }
+    return true;
+}
+
+bool RoomList::save(ostream& output)
+{
+    output << rooms.size() << endl;
+    output << setprecision(17);
+    for (int i = 0; i < rooms.size(); i++)
+    {
+        output << rooms[i].getNumber() << " "
+               << rooms[i].getBeds() << " "
+               << rooms[i].getPricePerNight() << endl;
+    }
+
+    output << reservations.size() << endl;
+    for (int i = 0; i < reservations.size(); i++)
+    {
+        output << reservations[i].roomNumber << " "
+               << reservations[i].startDate.date << " "
+               << reservations[i].endDate.date << endl;
+    }
+    return output.good();
+}
+
+bool RoomList::load(istream& input)
+{
+    int numberOfRooms;
+    if (!(input >> numberOfRooms) || numberOfRooms < 0)
+    {
+        return false;
+    }
+
+    RoomList loadedRooms;
+    for (int i = 0; i < numberOfRooms; i++)
+    {
+        int number, beds;
+        double price;
+        if (!(input >> number >> beds >> price) ||
+            !loadedRooms.add(number, beds, price))
+        {
+            return false;
+        }
+    }
+
+    int numberOfReservations;
+    if (!(input >> numberOfReservations) || numberOfReservations < 0)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < numberOfReservations; i++)
+    {
+        int number;
+        string startDateText, endDateText;
+        if (!(input >> number >> startDateText >> endDateText))
+        {
+            return false;
+        }
+        try
+        {
+            DateTime startDate(startDateText);
+            DateTime endDate(endDateText);
+            if (!loadedRooms.addReservation(number, startDate, endDate))
+            {
+                return false;
+            }
+        }
+        catch (const exception&)
+        {
+            return false;
+        }
+    }
+
+    rooms = loadedRooms.rooms;
+    reservations = loadedRooms.reservations;
     return true;
 }

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <iosfwd>
 #include "Client.h"
 using namespace std;
 
@@ -18,6 +19,8 @@ public:
     Client* findById(int id);
     void showAll();
     int count();
+    bool save(ostream& output);
+    bool load(istream& input);
 };
 
 #endif

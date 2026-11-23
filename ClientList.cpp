@@ -57,3 +57,35 @@ void ClientList::showAll() {
 int ClientList::count() {
     return clients.size();
 }
+
+bool ClientList::save(ostream& output) {
+    output << clients.size() << endl;
+    for (int i = 0; i < clients.size(); i++) {
+        output << clients[i].getId() << " "
+               << clients[i].getName() << " "
+               << clients[i].getSurname() << " "
+               << clients[i].getPhone() << endl;
+    }
+    return output.good();
+}
+
+bool ClientList::load(istream& input) {
+    int numberOfClients;
+    if (!(input >> numberOfClients) || numberOfClients < 0) {
+        return false;
+    }
+
+    ClientList loadedClients;
+    for (int i = 0; i < numberOfClients; i++) {
+        int id;
+        string name, surname, phone;
+        if (!(input >> id >> name >> surname >> phone) ||
+            id != loadedClients.nextId ||
+            !loadedClients.add(name, surname, phone)) {
+            return false;
+        }
+    }
+
+    *this = loadedClients;
+    return true;
+}

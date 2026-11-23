@@ -2,6 +2,7 @@
 #define ROOMLIST_H
 
 #include <vector>
+#include <iosfwd>
 #include "Room.h"
 #include "DateTime.h"
 using namespace std;
@@ -29,6 +30,8 @@ public:
     int count();
     bool addReservation(int number, DateTime startDate, DateTime endDate);
     bool checkAvailability(int number, DateTime startDate, DateTime endDate);
+    bool save(ostream& output);
+    bool load(istream& input);
 };
 
 #endif
